@@ -1,0 +1,25 @@
+{
+    "name": "conqueror",
+    "version": "0.0.1",
+    "description": "API and application layer for ConQ",
+    "main": "server.js",
+    "scripts": {
+        "test": "npm test"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/applait/conqueror"
+    },
+    "keywords": [
+        "webrtc",
+        "video",
+        "audio",
+        "conference",
+        "api"
+    ],
+    "author": "Applait Technologies LLP",
+    "license": "Proprietary",
+    "bugs": {
+        "url": "https://github.com/applait/conqueror/issues"
+    }
+}
