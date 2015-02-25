@@ -14,6 +14,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/assets", express.static(path.join(__dirname, 'assets')));
 app.use("/", express.static(path.join(__dirname, 'static')));
 
+// Register routes
+app.use("/api", require("./api/api"));
+
 // Start the server
 var server = app.listen(config.APP_PORT, config.APP_IP, function () {
     console.log("Starting ConQueror...");
