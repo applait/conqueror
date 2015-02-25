@@ -5,5 +5,8 @@
 var levelup = require("levelup");
 
 module.exports = {
-    sessions: levelup("./storage/sessions.db")
+    sessions: levelup("./storage/sessions.db", {
+        keyEncoding: "json",
+        valueEncoding: "json"
+    })
 };
