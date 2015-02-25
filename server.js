@@ -4,9 +4,16 @@ var express = require("express"),
     path = require("path"),
     fs = require("fs"),
     bodyParser = require("body-parser"),
-    config = require("./config");
+    config = require("./config"),
+    db = require("./db");
 
 var app = express();
+
+// Set useful globals
+global.cq = {
+    db: db,
+    config: config
+};
 
 // Configure application
 app.use(bodyParser.json());
