@@ -2,7 +2,6 @@
 
 var express = require("express"),
     path = require("path"),
-    fs = require("fs"),
     bodyParser = require("body-parser"),
     config = require("./config"),
     db = require("./db");
