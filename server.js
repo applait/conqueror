@@ -4,14 +4,21 @@ var express = require("express"),
     path = require("path"),
     bodyParser = require("body-parser"),
     config = require("./config"),
-    db = require("./db");
+    db = require("./db"),
+    kurentoclient = require("kurento-client");
 
 var app = express();
 
 // Set useful globals
 global.cq = {
     db: db,
-    config: config
+    config: config,
+    kurento: kurentoclient(config.KURENTO_URL, function (err, kurento) {
+        if (err) {
+            console.error("Could not find Kurento Media server at " + config.KURENTO_URL, err);
+        }
+        return kurento;
+    })
 };
 
 // Configure application
