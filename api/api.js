@@ -12,4 +12,6 @@ router.use("/create", require("./create"));
 
 router.use("/connect", require("./connect"));
 
+router.use("/get", require("./get"));
+
 module.exports = router;
