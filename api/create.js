@@ -10,7 +10,8 @@ var router = require("express").Router(),
 router.post("/", function (req, res) {
     var id = crypto.createHash("sha1")
             .update(Date.now().toString() + Math.random().toString())
-            .digest('hex');
+            .digest('hex')
+            .slice(0, 8);
 
     // Look for the `name` query parameter
     var name = req.body && req.body.name && req.body.name.trim();
