@@ -75,3 +75,6 @@ tramp
 
 # sftp configuration file
 sftp-config.json
+
+# Stop tracking config.js
+/config.js
