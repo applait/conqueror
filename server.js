@@ -17,6 +17,7 @@ global.cq = {
         if (err) {
             console.error("Could not find Kurento Media server at " + config.KURENTO_URL, err);
         }
+        console.log("Connected to Kurento server at " + config.KURENTO_URL);
         return kurento;
     })
 };
