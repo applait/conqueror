@@ -3,9 +3,11 @@
 var express = require("express"),
     path = require("path"),
     bodyParser = require("body-parser"),
-    config = require("./config"),
-    db = require("./db"),
     kurentoclient = require("kurento-client");
+
+var config = require("./config"),
+    db = require("./db"),
+    api = require("./api");
 
 var app = express();
 
@@ -27,11 +29,13 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/", express.static(path.join(__dirname, 'static')));
 
-// Register routes
-app.use("/api", require("./api/api"));
-
 // Start the server
 var server = app.listen(config.APP_PORT, config.APP_IP, function () {
     console.log("Starting ConQueror...");
     console.log("Listening on port %d", server.address().port);
+});
+
+var io = require("socket.io")(server);
+io.on("connection", function (socket) {
+    api(socket);
 });
