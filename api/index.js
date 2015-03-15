@@ -2,16 +2,24 @@
  * Core API handler
  */
 
-var router = require("express").Router();
+var callcreate = require("./create"),
+    callconnect = require("./connect"),
+    callget = require("./get");
 
-router.get("/", function (req, res) {
-    res.status(406).json({ "message": "Hello, multiverse!" });
-});
+module.exports = function (socket) {
 
-router.use("/create", require("./create"));
+    console.log("Received connection from %s", socket.client.conn.remoteAddress);
 
-router.use("/connect", require("./connect"));
+    socket.on("call:create", function (data, callback) {
+        callcreate(data, callback, socket);
+    });
 
-router.use("/get", require("./get"));
+    socket.on("call:connect", function (data, callback) {
+        callconnect(data, callback, socket);
+    });
 
-module.exports = router;
+    socket.on("call:get", function (data, callback) {
+        callget(data, callback, socket);
+    });
+
+};
