@@ -11,12 +11,17 @@ module.exports = function (data, callback, socket) {
             .update(Date.now().toString() + Math.random().toString())
             .digest('hex')
             .slice(0, 8);
-    console.log(data.sdp);
+
     // Look for the `name` query parameter
     var name = data && data.name && data.name.trim();
+    var sdpoffer = data && data.sdpOffer && data.sdpOffer.trim();
 
     if (!name) {
-        return callback({ "message": "Need `name` as a query parameter." });
+        return callback({ "message": "Need `name` to be passed in the data." });
+    }
+
+    if (!sdpoffer) {
+        return callback({ "message": "Need `sdpOffer` to be passed in the data." });
     }
 
     // Auth passed. Create MediaPipeline
@@ -30,14 +35,14 @@ module.exports = function (data, callback, socket) {
 
         // Create webrtc endpoint at this point?
 
-        pipeline.create("Mixer", function (error, mixer) {
+        pipeline.create("Composite", function (error, hub) {
             if (error) {
-                console.log("Mixer error", error);
+                console.log("Hub error", error);
                 return callback({ "message": "Oops! Error! API has gone nuts." });
             }
-            console.log("Mixer created", mixer.id);
+            console.log("Hub created", hub.id);
 
-            cq.kurento.create("HubPort", { "hub": mixer }, function (error, hubport) {
+            cq.kurento.create("HubPort", { "hub": hub }, function (error, hubport) {
                 if (error) {
                     console.log("HubPort error", error);
                     return callback({ "message": "Oops! Error! API has gone nuts." });
@@ -51,35 +56,56 @@ module.exports = function (data, callback, socket) {
                     }
                     console.log("WebRtcEndpoint created", webrtc.id);
 
-                    hubport.connect(webrtc, function (error) {
+                    webrtc.processOffer(sdpoffer, function (err, sdpanswer) {
                         if (error) {
-                            console.log("HubPort connection error", error);
+                            console.log("WebRtcEndpoint error", error);
                             return callback({ "message": "Oops! Error! API has gone nuts." });
                         }
 
-                        console.log("Hubport %s connected to WebRtcEndpoint %s", hubport.id, webrtc.id);
-
-                        var datetime = new Date();
-                        // Prepare data object
-                        var data = {
-                            members: [{ ip: socket.client.conn.remoteAddress, name: name, joined: datetime, quit: null,
-                                        hubport: hubport, webrtc: webrtc }],
-                            meta: {
-                                created: datetime,
-                                creator: name
-                            },
-                            pipeline: pipeline,
-                            mixer: mixer
-                        };
-
-                        // Put id in session db
-                        cq.db.sessions.put(id, data, function (err) {
-                            if (err) {
-                                console.log("[ERR] Creating session", id, null);
+                        webrtc.connect(hubport, function (error) {
+                            if (error) {
+                                console.log("WebRTC->HubPort connection error", error);
                                 return callback({ "message": "Oops! Error! API has gone nuts." });
                             }
-                            console.log("Session created", id, data.meta.created);
-                            return callback(null, { "message": "Session created", session: { id: id, data: data }});
+
+                            console.log("WebRTCEndpoint %s connected to Hubport %s", hubport.id, webrtc.id);
+
+                            hubport.connect(webrtc, function (error) {
+                                if (error) {
+                                    console.log("Hubport->WebRTC connection error", error);
+                                    return callback({ "message": "Oops! Error! API has gone nuts." });
+                                }
+
+                                console.log("Hubport %s connected to WebRTCEndpoint %s", hubport.id, webrtc.id);
+                                var datetime = new Date();
+                                // Prepare data object
+                                var data = {
+                                    members: [{ ip: socket.client.conn.remoteAddress, name: name, joined: datetime, quit: null,
+                                                hubport: hubport, webrtc: webrtc }],
+                                    meta: {
+                                        created: datetime,
+                                        creator: name
+                                    },
+                                    pipeline: pipeline,
+                                    hub: hub
+                                };
+
+                                // Put id in session db
+                                cq.db.sessions.put(id, data, function (err) {
+                                    if (err) {
+                                        console.log("[ERR] Creating session", id, null);
+                                        return callback({ "message": "Oops! Error! API has gone nuts." });
+                                    }
+                                    console.log("Session created", id, data.meta.created);
+                                    return callback(null, { "message": "Session created",
+                                                            session: { id: id,
+                                                                       data: data,
+                                                                       sdpAnswer: sdpanswer }});
+
+
+                                });
+
+                            });
                         });
                     });
                 });
