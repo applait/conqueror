@@ -1,0 +1,26 @@
+{
+    "name": "grouphone-demo",
+    "version": "0.0.1",
+    "description": "Grouphone audio calling demo",
+    "authors": [
+        "Applait Technologies LLP <contact@applait.com>"
+    ],
+    "main": "index.html",
+    "moduleType": [
+        "globals"
+    ],
+    "license": "Proprietary",
+    "homepage": "http://grouphone.applait.com/",
+    "private": true,
+    "ignore": [
+        "**/.*",
+        "node_modules",
+        "bower_components",
+        "test",
+        "tests"
+    ],
+    "dependencies": {
+        "webrtc-adapter": "*",
+        "kurento-utils": "5.1.0"
+    }
+}

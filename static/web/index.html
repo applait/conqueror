@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Grouphone Demo</title>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="bower_components/webrtc-adapter/adapter.js"></script>
+        <script src="bower_components/kurento-utils/js/kurento-utils.js"></script>
+    </head>
+
+    <body>
+        <video id="input_video" autoplay muted></video>
+        <video id="output_video" autoplay></video>
+        <input id="username" value="Kido">
+        <p>Session id: <span id="session_id"></span></p>
+        <button id="create_call">Create Call</button><hr>
+        <input id="call_id" value="" placeholder="Call id to join">
+        <button id="join_call">Join Call</button>
+        <script>
+         window.addEventListener("DOMContentLoaded", function () {
+             var socket = io(),
+                 inputvideo = document.querySelector("#input_video"),
+                 outputvideo = document.querySelector("#output_video"),
+                 callbtn = document.querySelector("#create_call"),
+                 sessionspan = document.querySelector("#session_id"),
+                 usernameinput = document.querySelector("#username"),
+                 callidinput = document.querySelector("#call_id"),
+                 joinbtn = document.querySelector("#join_call");
+
+             socket.on("connection", function () {
+                 console.log("connected");
+             });
+
+             callbtn.addEventListener("click", function () {
+                 kurentoUtils.WebRtcPeer.startSendRecv(inputvideo, outputvideo, function (sdpoffer, wp) {
+                     socket.emit("call:create", { "name": usernameinput.value, sdpOffer: sdpoffer }, function (err, res) {
+
+                         if (err) {
+                             console.log("Error", err);
+                             return false;
+                         }
+                         //console.log("Received response", res);
+                         console.log(wp);
+                         wp.processSdpAnswer(res.session.sdpAnswer, function () {
+                             sessionspan.innerHTML = res.session.id;
+                         });
+                     });
+                 }, function (error) {
+                     console.log("error", error);
+                 }, { audio: true, video: true });
+             }, false);
+
+
+             joinbtn.addEventListener("click", function () {
+                 kurentoUtils.WebRtcPeer.startSendRecv(inputvideo, outputvideo, function (sdpoffer, wp) {
+                     socket.emit("call:connect", { name: usernameinput.value, sdpOffer: sdpoffer, sessionid: callidinput.value }, function (err, res) {
+
+                         if (err) {
+                             console.log("Error", err);
+                             return false;
+                         }
+                         //console.log("Received response", res);
+                         console.log(wp);
+                         wp.processSdpAnswer(res.session.sdpAnswer, function () {
+                             sessionspan.innerHTML = res.session.id;
+                         });
+                     });
+                 }, function (error) {
+                     console.log("error", error);
+                 }, { audio: true, video: true });
+             }, false);
+         });
+        </script>
+    </body>
+
+</html>
