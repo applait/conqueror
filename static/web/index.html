@@ -2,74 +2,181 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>Grouphone Demo</title>
+        <title>Conqueror Demo</title>
 
         <script src="/socket.io/socket.io.js"></script>
         <script src="bower_components/webrtc-adapter/adapter.js"></script>
-        <script src="bower_components/kurento-utils/js/kurento-utils.js"></script>
     </head>
 
     <body>
-        <video id="input_video" autoplay muted></video>
-        <video id="output_video" autoplay></video>
-        <input id="username" value="Kido">
-        <p>Session id: <span id="session_id"></span></p>
+        <div>
+            <p>Input: <audio id="input_audio" autoplay controls muted></audio></p>
+            <p>Output: <audio id="output_audio" autoplay controls></audio></p>
+        </div>
+        <label>Username: <input id="username" value="Kido"></label>
+        <p><strong>Session id: <span id="session_id">Not yet received</span></strong></p>
+        <p><strong>Status: <span id="status">No connection</span></strong></p>
         <button id="create_call">Create Call</button><hr>
-        <input id="call_id" value="" placeholder="Call id to join">
+        <label>Call ID: <input id="call_id" value="" placeholder="Call id to join"></label>
         <button id="join_call">Join Call</button>
         <script>
+         var pclocal,
+             localstream,
+             localdesc,
+             iceended,
+             sdpanswer;
+
          window.addEventListener("DOMContentLoaded", function () {
              var socket = io(),
-                 inputvideo = document.querySelector("#input_video"),
-                 outputvideo = document.querySelector("#output_video"),
+                 localaudio = document.querySelector("#input_audio"),
+                 remoteaudio = document.querySelector("#output_audio"),
                  callbtn = document.querySelector("#create_call"),
                  sessionspan = document.querySelector("#session_id"),
-                 usernameinput = document.querySelector("#username"),
+                 statusspan = document.querySelector("#status"),
+                 nameinput = document.querySelector("#username"),
                  callidinput = document.querySelector("#call_id"),
                  joinbtn = document.querySelector("#join_call");
 
+             var calltype = "CREATE";
+
+             var servers = [ { username: undefined,
+                               credential: undefined,
+                               url: 'stun:stun.stunprotocol.org:3478',
+                               urls: [ 'stun:stun.stunprotocol.org:3478' ] },
+                             { username: undefined,
+                               credential: undefined,
+                               url: 'stun:stun4.l.google.com:19302',
+                               urls: [ 'stun:stun4.l.google.com:19302' ] } ]
+
+             var pcConstraints = {
+                 "mandatory": {
+                     "OfferToReceiveAudio": true,
+                     "OfferToReceiveVideo": false
+                 },
+                 "optional": []
+             };
+
              socket.on("message", function (message) {
-                 console.log(message);
+                 if (message.type) {
+                     switch (message.type) {
+                         case "CONNECTION":
+                             statusspan.innerHTML = "Connected to server";
+                             break;
+                         case "STATUS":
+                             statusspan.innerHTML = message.value;
+                             break;
+                         default:
+                             statusspan.innerHTML = "No connection";
+                     }
+                 }
              });
 
-             callbtn.addEventListener("click", function () {
-                 kurentoUtils.WebRtcPeer.startSendRecv(inputvideo, outputvideo, function (sdpoffer, wp) {
-                     socket.emit("call:create", { "name": usernameinput.value, sdpOffer: sdpoffer }, function (err, res) {
+             callbtn.addEventListener("click", createcall, false);
 
-                         if (err) {
-                             console.log("Error", err);
-                             return false;
-                         }
-                         //console.log("Received response", res);
-                         console.log(wp);
-                         wp.processSdpAnswer(res.session.sdpAnswer, function () {
-                             sessionspan.innerHTML = res.session.id;
-                         });
-                     });
-                 }, function (error) {
-                     console.log("error", error);
-                 }, { audio: true, video: true });
-             }, false);
+             joinbtn.addEventListener("click", joincall, false);
 
+             function createcall () {
+                 calltype = "CREATE";
+                 callbtn.setAttribute("disabled", "disabled");
+                 joinbtn.setAttribute("disabled", "disabled");
+                 console.log("Starting call");
+                 initiate();
+             }
 
-             joinbtn.addEventListener("click", function () {
-                 kurentoUtils.WebRtcPeer.startSendRecv(inputvideo, outputvideo, function (sdpoffer, wp) {
-                     socket.emit("call:connect", { name: usernameinput.value, sdpOffer: sdpoffer, sessionid: callidinput.value }, function (err, res) {
+             function joincall () {
+                 calltype = "JOIN";
+                 callbtn.setAttribute("disabled", "disabled");
+                 joinbtn.setAttribute("disabled", "disabled");
+                 console.log("Starting call");
+                 initiate();
+             }
 
-                         if (err) {
-                             console.log("Error", err);
-                             return false;
-                         }
-                         //console.log("Received response", res);
-                         console.log(wp);
-                         wp.processSdpAnswer(res.session.sdpAnswer, function () {
-                             sessionspan.innerHTML = res.session.id;
-                         });
-                     });
-                 }, function (error) {
-                     console.log("error", error);
-                 }, { audio: true, video: true });
-             }, false);
+             function initiate() {
+                 pclocal = new RTCPeerConnection({ iceServers: servers }, pcConstraints);
+                 pclocal.onicecandidate = addIceLocal;
+
+                 getUserMedia({ audio: true, video: false }, gotLocalStream, onerror);
+             }
+
+             function addIceLocal (event) {
+                 console.log(event.candidate);
+                 if (iceended) {
+                     return;
+                 }
+                 if (event.candidate) {
+                     iceended = false;
+                     return;
+                 }
+                 iceended = true;
+
+                 console.log("ICE negotiations completed");
+                 processSdpAnswer();
+             }
+
+             function gotLocalStream (stream) {
+                 localstream = stream;
+                 localaudio.src = URL.createObjectURL(localstream);
+                 localaudio.muted = true;
+                 console.log("Got audiotracks", localstream.getAudioTracks());
+                 pclocal.addStream(localstream);
+                 pclocal.createOffer(gotLocalDescription, onerror);
+             }
+
+             function gotLocalDescription (desc) {
+                 localdesc = desc;
+                 console.log("Got local description");
+                 pclocal.setLocalDescription(desc, function () {
+                     console.log("Local description set. Connecting to conqueror...");
+                     switch (calltype) {
+                         case "CREATE":
+                             socket.emit("call:create", { name: nameinput.value, sdpOffer: localdesc.sdp },
+                                         socketcallback);
+                             break;
+                         case "JOIN":
+                             socket.emit("call:connect", {
+                                 name: nameinput.value,
+                                 sdpOffer: localdesc.sdp,
+                                 sessionid: callidinput.value.trim()
+                             }, socketcallback);
+                             break;
+                     }
+                 }, onerror);
+             }
+
+             function socketcallback (err, val) {
+                 if (err) {
+                     statusspan.innerHTML = "ERROR: " + err.message;
+                     console.error(err);
+                     return;
+                 }
+                 sdpanswer = val.session.sdpAnswer;
+                 sessionspan.innerHTML = val.session.id;
+                 processSdpAnswer();
+             };
+
+             function processSdpAnswer () {
+                 console.log("Processing SDP Answer");
+                 if (!sdpanswer) {
+                     console.log("SDP Answer not set yet!");
+                     return false;
+                 }
+                 if (!iceended) {
+                     console.log("ICE negotiations not complete yet.");
+                     return false;
+                 }
+                 var answer = new RTCSessionDescription({
+                     type: "answer",
+                     sdp: sdpanswer
+                 });
+                 pclocal.setRemoteDescription(answer, function () {
+                     console.log("Remote description set");
+                     remoteaudio.src = URL.createObjectURL(pclocal.getRemoteStreams()[0]);
+                 }, onerror)
+             }
+
+             function onerror (e) {
+                 console.error("Error", e);
+             }
          });
         </script>
     </body>
