@@ -18,6 +18,11 @@ module.exports = function (data, callback, socket) {
         return callback({ "message": "Oops! Error! API has gone nuts." });
     };
 
+    var message = function (value, type) {
+        type = type || "STATUS";
+        socket.emit("message", { value: value, type: type });
+    };
+
     if (!id) {
         return callback({ "message": "Need `sessionid` to be passed in the data." });
     }
@@ -32,6 +37,7 @@ module.exports = function (data, callback, socket) {
 
     var pipelineretrieved = function (_pipeline) {
         console.log("MediaPipeline retrieved", _pipeline.id);
+        message("Obtained call pipeline");
 
         pipeline = _pipeline;
         cq.kurento.getMediaobjectById(session.hub.id).then(hubretrieved, onerror);
@@ -39,6 +45,7 @@ module.exports = function (data, callback, socket) {
 
     var hubretrieved = function (_hub) {
         console.log("Hub retrieved", _hub.id);
+        message("Obtained call hub");
 
         hub = _hub;
         cq.kurento.create("HubPort", { hub: hub }).then(hubportcreated, onerror);
@@ -46,6 +53,7 @@ module.exports = function (data, callback, socket) {
 
     var hubportcreated = function (_hubport) {
         console.log("Hubport created", _hubport.id);
+        message("Hubport created");
 
         hubport = _hubport;
         pipeline.create("WebRtcEndpoint").then(webrtcendpointcreated, onerror);
@@ -53,11 +61,14 @@ module.exports = function (data, callback, socket) {
 
     var webrtcendpointcreated = function (webrtc) {
         console.log("WebRtcEndpoint created", webrtc.id);
+        message("WebRTC Endpoint created");
 
         webrtc.processOffer(sdpoffer).then(function (sdpanswer) {
+            message("SDP offer accepted");
 
             webrtc.connect(hubport).then(function () {
                 hubport.connect(webrtc).then(function () {
+                    message("Connections established");
                     joinsession(webrtc, sdpanswer);
                 }, onerror);
             }, onerror);
