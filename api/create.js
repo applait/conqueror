@@ -12,6 +12,11 @@ module.exports = function (data, callback, socket) {
         return callback({ "message": "Oops! Error! API has gone nuts." });
     };
 
+    var message = function (value, type) {
+        type = type || "STATUS";
+        socket.emit("message", { value: value, type: type });
+    };
+
     var id = crypto.createHash("sha1")
             .update(Date.now().toString() + Math.random().toString())
             .digest('hex')
@@ -34,6 +39,7 @@ module.exports = function (data, callback, socket) {
 
     var pipelinecreated = function (_pipeline) {
         console.log("MediaPipeline created", _pipeline.id);
+        message("Pipeline created");
 
         pipeline = _pipeline;
         pipeline.create("Composite").then(hubcreated, onerror);
@@ -41,6 +47,7 @@ module.exports = function (data, callback, socket) {
 
     var hubcreated = function (_hub) {
         console.log("Hub Created", _hub.id);
+        message("Hub created");
 
         hub = _hub;
         cq.kurento.create("HubPort", { hub: hub }).then(hubportcreated, onerror);
@@ -48,6 +55,7 @@ module.exports = function (data, callback, socket) {
 
     var hubportcreated = function (_hubport) {
         console.log("Hubport created", _hubport.id);
+        message("Hubport created");
 
         hubport = _hubport;
         pipeline.create("WebRtcEndpoint").then(webrtcendpointcreated, onerror);
@@ -55,11 +63,15 @@ module.exports = function (data, callback, socket) {
 
     var webrtcendpointcreated = function (webrtc) {
         console.log("WebRtcEndpoint created", webrtc.id);
+        message("WebRTC Endpoint created");
 
         webrtc.processOffer(sdpoffer).then(function (sdpanswer) {
+            console.log("SDP offer accepted");
+            message("SDP offer accepted");
 
             webrtc.connect(hubport).then(function () {
                 hubport.connect(webrtc).then(function () {
+                    message("Connections established");
                     createsession(webrtc, sdpanswer);
                 }, onerror);
             }, onerror);
