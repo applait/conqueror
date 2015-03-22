@@ -28,8 +28,8 @@
                  callidinput = document.querySelector("#call_id"),
                  joinbtn = document.querySelector("#join_call");
 
-             socket.on("connection", function () {
-                 console.log("connected");
+             socket.on("message", function (message) {
+                 console.log(message);
              });
 
              callbtn.addEventListener("click", function () {
