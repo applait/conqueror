@@ -84,7 +84,7 @@ module.exports = function (data, callback, socket) {
         // Put id in session db
         cq.db.sessions.put(id, data, function (err) {
             if (err) {
-                onerror(err);
+                return onerror(err);
             }
             console.log("Session created", id, data.meta.created);
             return callback(null, { "message": "Session created",
