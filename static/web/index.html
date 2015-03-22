@@ -53,7 +53,9 @@
                      "OfferToReceiveAudio": true,
                      "OfferToReceiveVideo": false
                  },
-                 "optional": []
+                 "optional": [
+                     { "DtlsSrtpKeyAgreement": true }
+                 ]
              };
 
              socket.on("message", function (message) {
@@ -92,7 +94,7 @@
              }
 
              function initiate() {
-                 pclocal = new RTCPeerConnection({ iceServers: servers }, pcConstraints);
+                 pclocal = new RTCPeerConnection(null, pcConstraints);
                  pclocal.onicecandidate = addIceLocal;
 
                  getUserMedia({ audio: true, video: false }, gotLocalStream, onerror);
@@ -119,7 +121,11 @@
                  localaudio.muted = true;
                  console.log("Got audiotracks", localstream.getAudioTracks());
                  pclocal.addStream(localstream);
-                 pclocal.createOffer(gotLocalDescription, onerror);
+                 pclocal.onaddstream = function (mediastream) {
+                     console.log("stream added", mediastream);
+                     remoteaudio.src = URL.createObjectURL(mediastream.stream);
+                 };
+                 pclocal.createOffer(gotLocalDescription, onerror, pcConstraints);
              }
 
              function gotLocalDescription (desc) {
