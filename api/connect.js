@@ -11,7 +11,8 @@ module.exports = function (data, callback, socket) {
         pipeline = null,
         hub = null,
         hubport = null,
-        session = null;
+        session = null,
+        sinkport = null;
 
     var onerror = function (error) {
         console.log("ERROR", error);
@@ -48,6 +49,16 @@ module.exports = function (data, callback, socket) {
         message("Obtained call hub");
 
         hub = _hub;
+
+        cq.kurento.getMediaobjectById(session.sinkport.id).then(sinkportretrieved, onerror);
+    };
+
+    var sinkportretrieved = function (_sinkport) {
+        console.log("Sinkport retrieved", _sinkport.id);
+        message("Obtained sink port");
+
+        sinkport = _sinkport;
+
         cq.kurento.create("HubPort", { hub: hub }).then(hubportcreated, onerror);
     };
 
@@ -67,9 +78,17 @@ module.exports = function (data, callback, socket) {
             message("SDP offer accepted");
 
             webrtc.connect(hubport).then(function () {
-                hubport.connect(webrtc).then(function () {
-                    message("Connections established");
-                    joinsession(webrtc, sdpanswer);
+                console.log("WebRTC Endpoint connected to Hubport " + hubport.id);
+
+                hub.connect(hubport, sinkport).then(function () {
+                    console.log("Hubport connected to sinkport");
+
+                    sinkport.connect(webrtc).then(function () {
+                        console.log("Sinkport connected to WebRTC Endpoint.");
+                        message("Connections established");
+                        joinsession(webrtc, sdpanswer);
+                    }, onerror);
+
                 }, onerror);
             }, onerror);
 

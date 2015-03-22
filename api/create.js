@@ -27,7 +27,8 @@ module.exports = function (data, callback, socket) {
     var sdpoffer = data && data.sdpOffer && data.sdpOffer.trim();
     var pipeline = null,
         hub = null,
-        hubport = null;
+        hubport = null,
+        sinkport = null;
 
     if (!name) {
         return callback({ "message": "Need `name` to be passed in the data." });
@@ -42,7 +43,7 @@ module.exports = function (data, callback, socket) {
         message("Pipeline created");
 
         pipeline = _pipeline;
-        pipeline.create("Composite").then(hubcreated, onerror);
+        pipeline.create("Dispatcher").then(hubcreated, onerror);
     };
 
     var hubcreated = function (_hub) {
@@ -50,6 +51,14 @@ module.exports = function (data, callback, socket) {
         message("Hub created");
 
         hub = _hub;
+        cq.kurento.create("HubPort", { hub: hub }).then(sinkportcreated, onerror);
+    };
+
+    var sinkportcreated = function (_hubport) {
+        console.log("Hubport sink created", _hubport.id);
+        message("Hubport sink created");
+
+        sinkport = _hubport;
         cq.kurento.create("HubPort", { hub: hub }).then(hubportcreated, onerror);
     };
 
@@ -70,10 +79,19 @@ module.exports = function (data, callback, socket) {
             message("SDP offer accepted");
 
             webrtc.connect(hubport).then(function () {
-                hubport.connect(webrtc).then(function () {
-                    message("Connections established");
-                    createsession(webrtc, sdpanswer);
+                console.log("WebRTC Endpoint connected to Hubport " + hubport.id);
+
+                hub.connect(hubport, sinkport).then(function () {
+                    console.log("Hubport connected to sinkport");
+
+                    sinkport.connect(webrtc).then(function () {
+                        console.log("Sinkport connected to WebRTC Endpoint.");
+                        message("Connections established");
+                        createsession(webrtc, sdpanswer);
+                    }, onerror);
+
                 }, onerror);
+
             }, onerror);
 
         }, onerror);
@@ -90,7 +108,8 @@ module.exports = function (data, callback, socket) {
                 creator: name
             },
             pipeline: pipeline,
-            hub: hub
+            hub: hub,
+            sinkport: sinkport
         };
 
         // Put id in session db
