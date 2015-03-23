@@ -6,12 +6,13 @@
 
         <script src="/socket.io/socket.io.js"></script>
         <script src="bower_components/webrtc-adapter/adapter.js"></script>
+        <script src="bower_components/kurento-utils/js/kurento-utils.js"></script>
     </head>
 
     <body>
         <div>
-            <p>Input: <audio id="input_audio" autoplay controls muted></audio></p>
-            <p>Output: <audio id="output_audio" autoplay controls></audio></p>
+            <p>Input: <video id="input_video" autoplay controls muted></video></p>
+            <p>Output: <video id="output_video" autoplay controls></video></p>
         </div>
         <label>Username: <input id="username" value="Kido"></label>
         <p><strong>Session id: <span id="session_id">Not yet received</span></strong></p>
@@ -23,13 +24,12 @@
          var pclocal,
              localstream,
              localdesc,
-             iceended,
              sdpanswer;
 
          window.addEventListener("DOMContentLoaded", function () {
              var socket = io(),
-                 localaudio = document.querySelector("#input_audio"),
-                 remoteaudio = document.querySelector("#output_audio"),
+                 localvideo = document.querySelector("#input_video"),
+                 remotevideo = document.querySelector("#output_video"),
                  callbtn = document.querySelector("#create_call"),
                  sessionspan = document.querySelector("#session_id"),
                  statusspan = document.querySelector("#status"),
@@ -38,25 +38,6 @@
                  joinbtn = document.querySelector("#join_call");
 
              var calltype = "CREATE";
-
-             var servers = [ { username: undefined,
-                               credential: undefined,
-                               url: 'stun:stun.stunprotocol.org:3478',
-                               urls: [ 'stun:stun.stunprotocol.org:3478' ] },
-                             { username: undefined,
-                               credential: undefined,
-                               url: 'stun:stun4.l.google.com:19302',
-                               urls: [ 'stun:stun4.l.google.com:19302' ] } ]
-
-             var pcConstraints = {
-                 "mandatory": {
-                     "OfferToReceiveAudio": true,
-                     "OfferToReceiveVideo": false
-                 },
-                 "optional": [
-                     { "DtlsSrtpKeyAgreement": true }
-                 ]
-             };
 
              socket.on("message", function (message) {
                  if (message.type) {
@@ -94,59 +75,26 @@
              }
 
              function initiate() {
-                 pclocal = new RTCPeerConnection(null, pcConstraints);
-                 pclocal.onicecandidate = addIceLocal;
-
-                 getUserMedia({ audio: true, video: false }, gotLocalStream, onerror);
-             }
-
-             function addIceLocal (event) {
-                 console.log(event.candidate);
-                 if (iceended) {
-                     return;
-                 }
-                 if (event.candidate) {
-                     iceended = false;
-                     return;
-                 }
-                 iceended = true;
-
-                 console.log("ICE negotiations completed");
-                 processSdpAnswer();
-             }
-
-             function gotLocalStream (stream) {
-                 localstream = stream;
-                 localaudio.src = URL.createObjectURL(localstream);
-                 localaudio.muted = true;
-                 console.log("Got audiotracks", localstream.getAudioTracks());
-                 pclocal.addStream(localstream);
-                 pclocal.onaddstream = function (mediastream) {
-                     console.log("stream added", mediastream);
-                     remoteaudio.src = URL.createObjectURL(mediastream.stream);
-                 };
-                 pclocal.createOffer(gotLocalDescription, onerror, pcConstraints);
+                 pclocal = kurentoUtils.WebRtcPeer.startSendRecv(localvideo, remotevideo, gotLocalDescription,
+                                                                 onerror, { audio: true, video: false });
              }
 
              function gotLocalDescription (desc) {
                  localdesc = desc;
-                 console.log("Got local description");
-                 pclocal.setLocalDescription(desc, function () {
-                     console.log("Local description set. Connecting to conqueror...");
-                     switch (calltype) {
-                         case "CREATE":
-                             socket.emit("call:create", { name: nameinput.value, sdpOffer: localdesc.sdp },
-                                         socketcallback);
-                             break;
-                         case "JOIN":
-                             socket.emit("call:connect", {
-                                 name: nameinput.value,
-                                 sdpOffer: localdesc.sdp,
-                                 sessionid: callidinput.value.trim()
-                             }, socketcallback);
-                             break;
+                 console.log("Local description set. Connecting to conqueror...");
+                 switch (calltype) {
+                     case "CREATE":
+                         socket.emit("call:create", { name: nameinput.value, sdpOffer: localdesc },
+                                     socketcallback);
+                         break;
+                     case "JOIN":
+                         socket.emit("call:connect", {
+                             name: nameinput.value,
+                             sdpOffer: localdesc,
+                             sessionid: callidinput.value.trim()
+                         }, socketcallback);
+                         break;
                      }
-                 }, onerror);
              }
 
              function socketcallback (err, val) {
@@ -157,32 +105,12 @@
                  }
                  sdpanswer = val.session.sdpAnswer;
                  sessionspan.innerHTML = val.session.id;
-                 processSdpAnswer();
+                 pclocal.processSdpAnswer(sdpanswer);
              };
-
-             function processSdpAnswer () {
-                 console.log("Processing SDP Answer");
-                 if (!sdpanswer) {
-                     console.log("SDP Answer not set yet!");
-                     return false;
-                 }
-                 if (!iceended) {
-                     console.log("ICE negotiations not complete yet.");
-                     return false;
-                 }
-                 var answer = new RTCSessionDescription({
-                     type: "answer",
-                     sdp: sdpanswer
-                 });
-                 pclocal.setRemoteDescription(answer, function () {
-                     console.log("Remote description set");
-                     remoteaudio.src = URL.createObjectURL(pclocal.getRemoteStreams()[0]);
-                 }, onerror)
-             }
 
              function onerror (e) {
                  console.error("Error", e);
-             }
+            }
          });
         </script>
     </body>

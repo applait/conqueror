@@ -27,8 +27,7 @@ module.exports = function (data, callback, socket) {
     var sdpoffer = data && data.sdpOffer && data.sdpOffer.trim();
     var pipeline = null,
         hub = null,
-        hubport = null,
-        sinkport = null;
+        hubport = null;
 
     if (!name) {
         return callback({ "message": "Need `name` to be passed in the data." });
@@ -43,7 +42,7 @@ module.exports = function (data, callback, socket) {
         message("Pipeline created");
 
         pipeline = _pipeline;
-        pipeline.create("Dispatcher").then(hubcreated, onerror);
+        pipeline.create("Composite").then(hubcreated, onerror);
     };
 
     var hubcreated = function (_hub) {
@@ -51,14 +50,6 @@ module.exports = function (data, callback, socket) {
         message("Hub created");
 
         hub = _hub;
-        cq.kurento.create("HubPort", { hub: hub }).then(sinkportcreated, onerror);
-    };
-
-    var sinkportcreated = function (_hubport) {
-        console.log("Hubport sink created", _hubport.id);
-        message("Hubport sink created");
-
-        sinkport = _hubport;
         cq.kurento.create("HubPort", { hub: hub }).then(hubportcreated, onerror);
     };
 
@@ -81,15 +72,10 @@ module.exports = function (data, callback, socket) {
             webrtc.connect(hubport).then(function () {
                 console.log("WebRTC Endpoint connected to Hubport " + hubport.id);
 
-                hub.connect(hubport, sinkport).then(function () {
-                    console.log("Hubport connected to sinkport");
-
-                    sinkport.connect(webrtc).then(function () {
-                        console.log("Sinkport connected to WebRTC Endpoint.");
-                        message("Connections established");
-                        createsession(webrtc, sdpanswer);
-                    }, onerror);
-
+                hubport.connect(webrtc).then(function () {
+                    console.log("Hubport connected to WebRTC Endpoint.");
+                    message("Connections established");
+                    createsession(webrtc, sdpanswer);
                 }, onerror);
 
             }, onerror);
@@ -108,8 +94,7 @@ module.exports = function (data, callback, socket) {
                 creator: name
             },
             pipeline: pipeline,
-            hub: hub,
-            sinkport: sinkport
+            hub: hub
         };
 
         // Put id in session db
