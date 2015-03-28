@@ -8,7 +8,7 @@ var callcreate = require("./create"),
 
 module.exports = function (socket) {
 
-    console.log("Received connection from %s", socket.client.conn.remoteAddress);
+    console.log("Received connection");
     socket.emit("message", { value: "Connected. Ready.", type: "CONNECTION" });
 
     socket.on("call:create", function (data, callback) {
