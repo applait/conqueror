@@ -3,7 +3,7 @@
 var express = require("express"),
     path = require("path"),
     bodyParser = require("body-parser"),
-    kurentoclient = require("kurento-client");
+    nuve = require("./nuve");
 
 var config = require("./config"),
     db = require("./db"),
@@ -11,20 +11,22 @@ var config = require("./config"),
 
 var app = express();
 
+nuve.API.init(config.NUVE_SERVICE_ID, config.NUVE_SERVICE_KEY, config.NUVE_HOST);
+
 // Set useful globals
 global.cq = {
     db: db,
     config: config,
-    kurento: kurentoclient(config.KURENTO_URL, function (err, kurento) {
-        if (err) {
-            return console.error("Could not find Kurento Media server at " + config.KURENTO_URL, err);
-        }
-        console.log("Connected to Kurento server at " + config.KURENTO_URL);
-        return kurento;
-    })
+    nuve: nuve
 };
 
 // Configure application
+app.use(function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    return next();
+});
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/", express.static(path.join(__dirname, 'static')));
@@ -35,7 +37,8 @@ var server = app.listen(config.APP_PORT, config.APP_IP, function () {
     console.log("Listening on port %d", server.address().port);
 });
 
-var io = require("socket.io")(server);
+var io = require("socket.io").listen(server);
+io.set("log level", 1);
 io.on("connection", function (socket) {
     api(socket);
 });
