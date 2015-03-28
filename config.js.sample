@@ -3,7 +3,7 @@ var config = {
     APP_PORT: "8000",
     NUVE_SERVICE_ID: "xxxx",
     NUVE_SERVICE_KEY: "xxxx",
-    NUVE_HOST: "http://localhost:3000"
+    NUVE_HOST: "http://localhost:3000/"
 };
 
 module.exports = config;
