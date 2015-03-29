@@ -52,7 +52,7 @@ module.exports = function (data, callback, socket) {
     // Fetch session
     cq.db.sessions.get(id, function (err, session) {
         if (err) {
-            console.er("[ERR] Fetching session", id, err);
+            console.error("[ERR] Fetching session", id, err);
             return callback({ "message": "Not right." });
         }
 
