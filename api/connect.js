@@ -31,7 +31,7 @@ module.exports = function (data, callback, socket) {
     var updatesession = function (session, username, token) {
         var datetime = new Date();
 
-        session.members[username] = { name: username, joined: datetime, quit: null, token: token };
+        session.members[username] = { name: username, joined: datetime, quit: null, token: token, creator: false };
 
         // Put id in session db
         cq.db.sessions.put(id, session, function (err) {

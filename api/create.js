@@ -44,7 +44,7 @@ module.exports = function (data, callback, socket) {
             }
         };
 
-        sessiondata.members[username] =  { name: username, joined: datetime, quit: null, token: token };
+        sessiondata.members[username] =  { name: username, joined: datetime, quit: null, token: token, creator: true };
 
         // Put id in session db
         cq.db.sessions.put(id, sessiondata, function (err) {
