@@ -7,6 +7,8 @@
 var crypto = require("crypto");
 
 module.exports = function (data, callback, socket) {
+    var username = data && data.username && data.username.trim();
+
     var onerror = function (error) {
         console.log("ERROR", error);
         return callback({ "message": "Oops! Error! API has gone nuts." });
@@ -23,6 +25,10 @@ module.exports = function (data, callback, socket) {
             .digest('hex')
             .slice(0, 8);
     };
+
+    if (!username) {
+        return callback({ "message": "Need `username` to be passed in the data." });
+    }
 
     var id = createstring();
 
@@ -62,7 +68,6 @@ module.exports = function (data, callback, socket) {
         message("Room created");
         console.log("Nuve Room created ", room._id);
         // Room created. Connect current user
-        var username = createstring();
         cq.nuve.API.createToken(room._id, username, "audiocaller", function (token) {
             // Got user token
             message("Generated token");

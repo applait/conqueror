@@ -8,6 +8,7 @@ var crypto = require("crypto");
 
 module.exports = function (data, callback, socket) {
     var id = data && data.sessionid && data.sessionid.trim();
+    var username = data && data.username && data.username.trim();
 
     var onerror = function (error) {
         console.log("ERROR", error);
@@ -19,15 +20,12 @@ module.exports = function (data, callback, socket) {
         socket.emit("message", { value: value, type: type });
     };
 
-    var createstring = function () {
-        return crypto.createHash("sha1")
-            .update(Date.now().toString() + Math.random().toString())
-            .digest('hex')
-            .slice(0, 8);
-    };
-
     if (!id) {
         return callback({ "message": "Need `sessionid` to be passed in the data." });
+    }
+
+    if (!username) {
+        return callback({ "message": "Need `username` to be passed in the data." });
     }
 
     var updatesession = function (session, username, token) {
@@ -56,11 +54,9 @@ module.exports = function (data, callback, socket) {
             return callback({ "message": "Not right." });
         }
 
-        var username = createstring();
-
-        // Check for uxistingname name
+        // Check for existing name
         if (session.members[username]) {
-            username = createstring();
+            return callback({ "message": "Username is already present in the call." });
         }
 
         console.log("Connecting %s to call id %s. Retrieving room.", username, id);
