@@ -8,3 +8,15 @@ Internal media-server abstraction layer for Grouphone and ConQ.
 - Change values in `config.js` if necessary.
 - `npm install`
 - `node server.js`
+
+## Start all services on server (with Licode)
+
+```
+# ./scripts/startall.sh <path-to-conqueror> <path-to-licode>
+```
+
+## Stop all services on server
+
+```
+# ./scripts/stopall.sh
+```
