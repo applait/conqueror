@@ -1,6 +1,6 @@
 # ConQueror
 
-Application layer for ConQ
+Internal media-server abstraction layer for Grouphone and ConQ.
 
 ## Install
 
