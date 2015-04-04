@@ -4,7 +4,8 @@
 
 var callcreate = require("./create"),
     callconnect = require("./connect"),
-    get = require("./get");
+    get = require("./get"),
+    disconnect = require("./disconnect");
 
 module.exports = function (socket) {
 
@@ -21,6 +22,10 @@ module.exports = function (socket) {
 
     socket.on("call:get", function (data, callback) {
         get.getsession(data, callback, socket);
+    });
+
+    socket.on("call:disconnect", function (data, callback) {
+        disconnect(data, callback, socket);
     });
 
     socket.on("room:get", function (data, callback) {
