@@ -4,7 +4,7 @@
 
 var callcreate = require("./create"),
     callconnect = require("./connect"),
-    callget = require("./get");
+    get = require("./get");
 
 module.exports = function (socket) {
 
@@ -20,7 +20,15 @@ module.exports = function (socket) {
     });
 
     socket.on("call:get", function (data, callback) {
-        callget(data, callback, socket);
+        get.getsession(data, callback, socket);
+    });
+
+    socket.on("room:get", function (data, callback) {
+        get.getroom(data, callback, socket);
+    });
+
+    socket.on("room:users", function (data, callback) {
+        get.getusers(data, callback, socket);
     });
 
 };
