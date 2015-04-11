@@ -38,6 +38,15 @@ module.exports = function (data, callback, socket) {
             if (err) {
                 return onerror(err);
             }
+            socket.join(id, function (err) {
+                if (err) {
+                    message("Couldn't join session list", "ERROR");
+                    console.log(err);
+                } else {
+                    message("Joined session list");
+                }
+            });
+            socket.broadcast.to(id).emit("user:joined", { value: { name: username, joined: datetime } });
             console.log("Session joined", id);
             return callback(null, { message: "Session joined",
                                     session: { id: id,

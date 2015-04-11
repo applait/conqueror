@@ -34,6 +34,9 @@ var disconnect = function (data, callback, socket) {
             deleteuser(user, id, session, callback);
         }
 
+        socket.leave(id);
+        socket.broadcast.to(id).emit("user:dropped", { value: { name: username } });
+
         return callback(null, { "message": "Session info", "session": { "id": id, "data": data }});
     });
 };

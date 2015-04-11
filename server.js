@@ -39,6 +39,6 @@ var server = app.listen(config.APP_PORT, config.APP_IP, function () {
 
 var io = require("socket.io").listen(server);
 io.set("log level", 1);
-io.on("connection", function (socket) {
+io.sockets.on("connection", function (socket) {
     api(socket);
 });
