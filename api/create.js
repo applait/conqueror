@@ -11,7 +11,7 @@ module.exports = function (data, callback, socket) {
 
     var onerror = function (error) {
         console.log("ERROR", error);
-        return callback({ "message": "Oops! Error! API has gone nuts." });
+        return callback({ "message": "Oops! Error! API has gone nuts.", "status": 500 });
     };
 
     var message = function (value, type) {
@@ -27,7 +27,7 @@ module.exports = function (data, callback, socket) {
     };
 
     if (!username) {
-        return callback({ "message": "Need `username` to be passed in the data." });
+        return callback({ "message": "Need `username` to be passed in the data.", "status": 401 });
     }
 
     var id = createstring();

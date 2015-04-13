@@ -8,24 +8,24 @@ var disconnect = function (data, callback, socket) {
         username = data && data.username && data.username.trim();
 
     if (!id) {
-        return callback({ "message": "Need a session id" });
+        return callback({ "message": "Need a session id", "status": 401 });
     }
 
     if (!username) {
-        return callback({ "message": "Need a `username`" });
+        return callback({ "message": "Need a `username`", "status": 401 });
     }
 
     // Fetch session
     cq.db.sessions.get(id, function (err, session) {
         if (err) {
             console.log("[ERR] Fetching session", id, err);
-            return callback({ "message": "Not right." });
+            return callback({ "message": "Error fetching session.", "status": 500 });
         }
 
         var user = session.members[username];
 
         if (!user) {
-            return callback({ "message": "User does not exist in session." });
+            return callback({ "message": "User does not exist in session.", "status": 401 });
         }
 
         socket.broadcast.to(id).emit("user:dropped", { value: { name: username } });
@@ -48,13 +48,13 @@ var deleteroom = function (sessionid, session, callback) {
         cq.db.sessions.del(sessionid, function (err) {
             if (err) {
                 console.log("Room deleted, but could not delete session: ", sessionid);
-                return callback({ "message": "Room deleted. But session not deleted"});
+                return callback({ "message": "Room deleted. But session not deleted", "status": 500 });
             }
             callback(null, { "message": "Session deleted" });
         });
     }, function (err) {
         console.log("[ERR] Deleting room", roomid, err);
-        callback({ "message": "Couldn't delete room." });
+        callback({ "message": "Couldn't delete room.", "status": 500 });
     });
 };
 
@@ -63,7 +63,7 @@ var deleteuser = function (user, sessionid, session, callback) {
     cq.db.sessions.put(sessionid, session, function (err) {
         if (err) {
             console.log("[ERR] Updating session after removing user", sessionid, err);
-            return callback({ "message": "Couldn't update session." });
+            return callback({ "message": "Couldn't update session.", "status": 500 });
         }
         callback(null, { "message": "User removed" });
     });

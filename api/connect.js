@@ -12,7 +12,7 @@ module.exports = function (data, callback, socket) {
 
     var onerror = function (error) {
         console.log("ERROR", error);
-        return callback({ "message": "Oops! Error! API has gone nuts." });
+        return callback({ "message": "Oops! Error! API has gone nuts.", "status": 500 });
     };
 
     var message = function (value, type) {
@@ -21,11 +21,11 @@ module.exports = function (data, callback, socket) {
     };
 
     if (!id) {
-        return callback({ "message": "Need `sessionid` to be passed in the data." });
+        return callback({ "message": "Need `sessionid` to be passed in the data.", "status": 401 });
     }
 
     if (!username) {
-        return callback({ "message": "Need `username` to be passed in the data." });
+        return callback({ "message": "Need `username` to be passed in the data.", "status": 401 });
     }
 
     var updatesession = function (session, username, token) {
@@ -60,12 +60,12 @@ module.exports = function (data, callback, socket) {
     cq.db.sessions.get(id, function (err, session) {
         if (err) {
             console.error("[ERR] Fetching session", id, err);
-            return callback({ "message": "Not right." });
+            return callback({ "message": "Error fetching session.", "status": 500 });
         }
 
         // Check for existing name
         if (session.members[username]) {
-            return callback({ "message": "Username is already present in the call." });
+            return callback({ "message": "Username is already present in the call.", "status": 403 });
         }
 
         console.log("Connecting %s to call id %s. Retrieving room.", username, id);
