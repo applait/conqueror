@@ -28,19 +28,17 @@ var disconnect = function (data, callback, socket) {
             return callback({ "message": "User does not exist in session.", "status": 401 });
         }
 
-        socket.broadcast.to(id).emit("user:dropped", { value: { name: username } });
-
         if (user.creator) {
-            deleteroom(id, session, callback);
+            deleteroom(id, session, socket, callback);
         } else {
-            deleteuser(user, id, session, callback);
+            deleteuser(user, id, session, socket, callback);
         }
 
-        return callback(null, { "message": "Session info", "session": { "id": id, "data": data }});
+        //return callback(null, { "message": "Session info", "session": { "id": id, "data": data }});
     });
 };
 
-var deleteroom = function (sessionid, session, callback) {
+var deleteroom = function (sessionid, session, socket, callback) {
 
     // Fetch room
     cq.nuve.API.deleteRoom(session.room._id, function () {
@@ -50,6 +48,8 @@ var deleteroom = function (sessionid, session, callback) {
                 console.log("Room deleted, but could not delete session: ", sessionid);
                 return callback({ "message": "Room deleted. But session not deleted", "status": 500 });
             }
+            socket.broadcast.to(sessionid).emit("call:ended", { value: { sessionid: sessionid } });
+            console.log("Call ended - creator disconnect", sessionid);
             callback(null, { "message": "Session deleted" });
         });
     }, function (err) {
@@ -58,13 +58,15 @@ var deleteroom = function (sessionid, session, callback) {
     });
 };
 
-var deleteuser = function (user, sessionid, session, callback) {
+var deleteuser = function (user, sessionid, session, socket, callback) {
     delete session.members[user.name];
     cq.db.sessions.put(sessionid, session, function (err) {
         if (err) {
             console.log("[ERR] Updating session after removing user", sessionid, err);
             return callback({ "message": "Couldn't update session.", "status": 500 });
         }
+        socket.broadcast.to(sessionid).emit("user:dropped", { value: { name: user.name } });
+        console.log("User removed from session. user: %s, session: %s", user.name, sessionid);
         callback(null, { "message": "User removed" });
     });
 };
