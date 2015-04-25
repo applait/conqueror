@@ -4,7 +4,8 @@
     "description": "API and application layer for ConQ",
     "main": "server.js",
     "scripts": {
-        "test": "npm test"
+      "test": "npm test",
+      "cert": "./scripts/generatecert.sh"
     },
     "repository": {
         "type": "git",
