@@ -54,7 +54,6 @@ var server = https.createServer(https_options, app).listen(config.APP_PORT, conf
 
 var io = require("socket.io").listen(server);
 io.set("log level", 1);
-io.set("origins", config.ALLOWED_ORIGINS);
 io.sockets.on("connection", function (socket) {
     api(socket);
 });
