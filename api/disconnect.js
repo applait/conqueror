@@ -18,8 +18,8 @@ var disconnect = function (data, callback, socket) {
     // Fetch session
     cq.db.sessions.get(id, function (err, session) {
         if (err) {
-            console.log("[ERR] Fetching session", id, err);
-            return callback({ "message": "Error fetching session.", "status": 500 });
+            console.log("Session already closed.", id);
+            return callback({ "message": "Session already closed.", "status": 200 });
         }
 
         var user = session.members[username];

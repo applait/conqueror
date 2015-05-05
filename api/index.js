@@ -24,7 +24,12 @@ module.exports = function (socket) {
         get.getsession(data, callback, socket);
     });
 
+    socket.on("call:data", function (data) {
+        socket.data = data;
+    });
+
     socket.on("call:disconnect", function (data, callback) {
+        delete socket.data;
         disconnect(data, callback, socket);
     });
 
@@ -34,6 +39,18 @@ module.exports = function (socket) {
 
     socket.on("room:users", function (data, callback) {
         get.getusers(data, callback, socket);
+    });
+
+    socket.on("disconnect", function () {
+        console.log("Disconnecting socket", (socket.data ? socket.data : " [Already disconnected]"));
+        if (socket.data && socket.data.sessionid && socket.data.username) {
+            disconnect(socket.data, function (err, data) {
+                if (err) {
+                    return console.log("Disconnect: " + err.message);
+                }
+                console.log("Disconnect: " + data.message);
+            }, socket);
+        }
     });
 
 };
