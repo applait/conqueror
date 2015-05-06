@@ -65,7 +65,8 @@ module.exports = function (data, callback, socket) {
 
         // Check for existing name
         if (session.members[username]) {
-            return callback({ "message": "Username is already present in the call.", "status": 403 });
+            //return callback({ "message": "Username is already present in the call.", "status": 403 });
+            username = username + "1";
         }
 
         console.log("Connecting %s to call id %s. Retrieving room.", username, id);
