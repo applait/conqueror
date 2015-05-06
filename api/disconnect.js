@@ -28,11 +28,12 @@ var disconnect = function (data, callback, socket) {
             return callback({ "message": "User does not exist in session.", "status": 401 });
         }
 
-        if (user.creator) {
-            deleteroom(id, session, socket, callback);
-        } else {
-            deleteuser(user, id, session, socket, callback);
-        }
+        // if (user.creator) {
+        //     deleteroom(id, session, socket, callback);
+        // } else {
+        //     deleteuser(user, id, session, socket, callback);
+        // }
+        deleteuser(user, id, session, socket, callback);
 
         //return callback(null, { "message": "Session info", "session": { "id": id, "data": data }});
     });
