@@ -60,15 +60,15 @@ var deleteroom = function (sessionid, session, socket, callback) {
 };
 
 var deleteuser = function (user, sessionid, session, socket, callback) {
-    delete session.members[user.name];
+    session.members[user.name].quit = true;
     cq.db.sessions.put(sessionid, session, function (err) {
         if (err) {
             console.log("[ERR] Updating session after removing user", sessionid, err);
             return callback({ "message": "Couldn't update session.", "status": 500 });
         }
         socket.broadcast.to(sessionid).emit("user:dropped", { value: { name: user.name } });
-        console.log("User removed from session. user: %s, session: %s", user.name, sessionid);
-        callback(null, { "message": "User removed" });
+        console.log("User quit from session. user: %s, session: %s", user.name, sessionid);
+        callback(null, { "message": "User quit" });
     });
 };
 
