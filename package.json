@@ -4,8 +4,9 @@
     "description": "API and application layer for ConQ",
     "main": "server.js",
     "scripts": {
-      "test": "npm test",
-      "cert": "./scripts/generatecert.sh"
+        "test": "npm test",
+        "cert": "./scripts/generatecert.sh",
+        "make": "./scripts/make.sh"
     },
     "repository": {
         "type": "git",
@@ -28,6 +29,7 @@
         "express": "4.12.0",
         "leveldown": "0.10.4",
         "levelup": "0.19.0",
-        "socket.io": "0.9.6"
+        "socket.io": "0.9.6",
+        "uglifyjs": "~2.4.10"
     }
 }
