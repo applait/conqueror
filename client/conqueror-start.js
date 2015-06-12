@@ -94,7 +94,7 @@ Conqueror.prototype.initcall = function () {
             self.token = data.token;
 
             self.localstream = Erizo.Stream({ audio: true, video: false, data: false });
-            self.room = Erizo.Room({ roomID: data.session.data.room._id, token: token});
+            self.room = Erizo.Room({ roomID: data.session.data.room._id, token: self.token});
 
             // When user has accepted request to share microphone
             self.localstream.addEventListener("access-accepted", function () {
