@@ -2,7 +2,7 @@ var Conqueror = function (options) {
 
     this.options = options || {};
 
-    this.conqueror_path = this.options.conqueror_path || "https://grouphone.me:441";
+    this.conqueror_path = this.options.conqueror_path;
     this.sessionid = this.options.sessionid || null;
     this.username = this.options.username || null;
     this.localstream = this.options.localstream || null;

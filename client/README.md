@@ -31,7 +31,7 @@ var options = {
   audiocontainer: audioList, // DOM reference of a `div` where the audio elements will be pushed. Defaults to selecting `#audiocontainer`.
   sessionid: id, // Session ID of the call to join. If not provided, it will start a new call.
   username: user, // An ID of the current user
-  conqueror_path: path // Provide a path to a private conqueror instance, if known. Else this will use the public instance by default.
+  conqueror_path: path // Provide a path to a conqueror instance.
 }
 ```
 
