@@ -53,14 +53,14 @@ Conqueror.prototype.initcall = function () {
         }
     });
 
-    self.socket.on("user:joined", function () {
+    self.socket.on("user:joined", function (data) {
         // User joined
-        self.isFunction(self.onuserjoin) && self.onuserjoin();
+        self.isFunction(self.onuserjoin) && self.onuserjoin(data);
     });
 
-    self.socket.on("user:dropped", function () {
+    self.socket.on("user:dropped", function (data) {
         // User dropped
-        self.isFunction(self.onuserdrop) && self.onuserdrop();
+        self.isFunction(self.onuserdrop) && self.onuserdrop(data);
     });
 
     self.socket.on("call:ended", function () {
