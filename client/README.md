@@ -35,6 +35,24 @@ var options = {
 }
 ```
 
+## Methods
+
+**this.initcall()**
+
+Start the call once the instance is ready.
+
+**this.mute()**
+
+Mute the outgoing audio stream during a call.
+
+**this.unmute()**
+
+Unmute the outgoing audio stream during a call.
+
+**this.endcall()**
+
+End the current call.
+
 ## Event listeners
 
 An instance of `Conqueror` provides a number of hooks where you can provide listener functions. Here are the hooks available:
