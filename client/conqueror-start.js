@@ -14,6 +14,19 @@ var Conqueror = function (options) {
     this.membercount = 0;
     this.creator = {};
 
+    // Bindings
+    this.onuserjoin = null;
+    this.onuserdrop = null;
+    this.onconnection = null;
+    this.onstatus = null;
+    this.oncallstart = null;
+    this.oncallend = null;
+
+    // Utilities
+    this.isFunction = function (param) {
+        if (param && typeof param === "function") return true;
+        return false;
+    };
 };
 
 Conqueror.prototype.initcall = function () {
@@ -30,10 +43,11 @@ Conqueror.prototype.initcall = function () {
         if (message.type) {
             switch (message.type) {
             case "CONNECTION":
+                self.isFunction(self.onconnection) && self.onconnection(message);
                 checkcall();
                 break;
             case "STATUS":
-                console.log("message", message.value);
+                self.isFunction(self.onstatus) && self.onstatus(message);
                 break;
             }
         }
@@ -41,10 +55,12 @@ Conqueror.prototype.initcall = function () {
 
     self.socket.on("user:joined", function () {
         // User joined
+        self.isFunction(self.onuserjoin) && self.onuserjoin();
     });
 
     self.socket.on("user:dropped", function () {
         // User dropped
+        self.isFunction(self.onuserdrop) && self.onuserdrop();
     });
 
     self.socket.on("call:ended", function () {
@@ -95,6 +111,8 @@ Conqueror.prototype.initcall = function () {
 
             self.localstream = Erizo.Stream({ audio: true, video: false, data: false });
             self.room = Erizo.Room({ roomID: data.session.data.room._id, token: self.token});
+
+            self.isFunction(self.oncallstart) && self.oncallstart(data.session.id);
 
             // When user has accepted request to share microphone
             self.localstream.addEventListener("access-accepted", function () {
@@ -199,4 +217,6 @@ Conqueror.prototype.endcall = function () {
     if (this.socket) this.socket.disconnect();
     window.onbeforeunload = null;
     this.room = this.socket = this.localstream = null;
+
+    self.isFunction(self.oncallend) && self.oncallend();
 };
